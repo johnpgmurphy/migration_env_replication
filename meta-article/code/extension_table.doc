@@ -1,0 +1,51 @@
+
+\begin{table}[!htbp] \centering 
+  \caption{} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{5pt}}lc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{1}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-2} 
+\\[-1.8ex] & stancoeff \\ 
+\\[-1.8ex] & \textit{normal} \\ 
+\hline \\[-1.8ex] 
+ pre\_var & 0.004$^{*}$ ($-$0.0005, 0.008) \\ 
+  rapidonset & $-$0.209$^{**}$ ($-$0.411, $-$0.008) \\ 
+  tem\_lev & $-$0.191$^{*}$ ($-$0.392, 0.011) \\ 
+  tem\_var & $-$0.210$^{**}$ ($-$0.411, $-$0.008) \\ 
+  env\_lag\_dum & 0.0002 ($-$0.002, 0.003) \\ 
+  env\_timespan\_dum & $-$0.006$^{***}$ ($-$0.008, $-$0.004) \\ 
+  env\_other\_dum & 0.0001 ($-$0.002, 0.002) \\ 
+  internal & $-$0.003$^{*}$ ($-$0.006, 0.0003) \\ 
+  dest\_low & 0.031$^{***}$ (0.018, 0.043) \\ 
+  dest\_high & 0.010$^{***}$ (0.008, 0.013) \\ 
+  dest\_ambi & 0.010$^{***}$ (0.005, 0.015) \\ 
+  L & $-$0.039$^{***}$ ($-$0.054, $-$0.024) \\ 
+  LM & 0.005 ($-$0.003, 0.014) \\ 
+  UM & 0.043$^{***}$ (0.030, 0.056) \\ 
+  agr & 0.071$^{***}$ (0.051, 0.090) \\ 
+  conflict\_mepv\_5 & $-$0.026$^{***}$ ($-$0.039, $-$0.014) \\ 
+  period\_end\_c & $-$0.001$^{***}$ ($-$0.001, $-$0.001) \\ 
+  env\_typedrought & $-$0.212$^{**}$ ($-$0.413, $-$0.010) \\ 
+  env\_typeearthquake & 0.004$^{*}$ ($-$0.0004, 0.009) \\ 
+  env\_typeextreme rainfall & $-$0.196$^{*}$ ($-$0.399, 0.006) \\ 
+  env\_typeextreme temperature & $-$0.017$^{***}$ ($-$0.022, $-$0.011) \\ 
+  env\_typeflood & 0.015$^{***}$ (0.008, 0.021) \\ 
+  env\_typehurricane & $-$0.009 ($-$0.021, 0.003) \\ 
+  env\_typelandslide & 0.002 ($-$0.001, 0.006) \\ 
+  env\_typemoderate temperature & 0.001 ($-$0.017, 0.019) \\ 
+  env\_typemoisture &  \\ 
+  env\_typestorm & 0.0004 ($-$0.006, 0.007) \\ 
+  env\_typetemperature shortage &  \\ 
+  Constant & 0.193$^{*}$ ($-$0.009, 0.394) \\ 
+ \hline \\[-1.8ex] 
+Observations & 1,803 \\ 
+Log Likelihood & 2,423.026 \\ 
+Akaike Inf. Crit. & $-$4,780.052 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{1}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{1}{r}{Test} \\ 
+\end{tabular} 
+\end{table} 

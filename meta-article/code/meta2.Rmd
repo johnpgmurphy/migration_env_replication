@@ -19,10 +19,10 @@ library(jtools)
 library(RColorBrewer) 
 library(rgeos)
 library(rnaturalearth)
+
 ```
 
 ```{r}
-setwd("~/Desktop/Gov52/rep_project/meta-article")
 
 countrydata <- read_xlsx("../data/Environmental Change and Migration_Country Level Data.xlsx")
 
@@ -178,7 +178,7 @@ low-income countries restrict migration following environmental changes as
 contrasted with the movements of residents of higher-income countries.
 
 [^note_call]: The data and code used in this replication report can be obtained 
-at ##insert github link here ##
+at https://github.com/johnpgmurphy/migration_env_replication
 
 ```{r results = 'asis'}
 
@@ -689,40 +689,113 @@ conflict, GDP per capita, and environmental changes. Such a map, if animated
 as a time-lapse, would provide a further dimension to understand the implications
 of the findings of this meta-analysis.
 
-I also produced a sixth linear model using the variables 
-examined in the authors' fifth with the addition of regional factor variables
-to identify how the same results varied from one region to another. The results
-of this model are below.
+With the data for such an animation, the paper could also be extended to include
+a dichotomous outcome model such as a logit model by setting a threshold for
+when a country is deemed a "migration hotspot" as is used in the current map.
+The model could then be used to predict, based on the selected variables, whether
+a given country with a set of characteristics is likely to be an out-migration
+hotspot. This could even be converted into a multi-level model using annual
+progression as its level, as each migration score is related to its temporal
+neighbours. 
 
-```{r results = 'asis'}
+As the output variable, stancoeff, represents the number of standard deviations
+from the global average out-migration likelihood a given country is expected
+to shift as a result of numerous variables including environmental changes and
+conflict and is as a consequence non-dichotomous and not counting, the chosen
+model (linear) suits the data better than alternatives like a Poisson or
+a logit model. The data, unfortunately, is almost all at the country level, so
+multilevel models don't match the data. This was tested by running several models
+using, separately, the region focused on in each study as levels, the model
+type used by the studies as levels, the type of environmental change as levels, 
+and the individual studies as levels. None of the resulting standard deviations
+for the selected level-variable in the produced multilevel models were large 
+enough relative to the residual standard deviation to justify their use as
+levels. 
 
-regions <- c("ssa", "europena", "asia", "lac", 
-                                "mena")
+As such, continuing with the approach of the original authors, I produced a 
+sixth linear model to extend the analysis. The env_type variable was inconsistently
+coded in the data, so I condensed the groupings (e.g. placing all types of 
+environmental disasters under the umbrella label 'disaster', joining 'excess'
+and 'extreme' versions of the same phenomena, and ensuring that 'precipitation'
+and 'rainfall' were considered equal). I then added both the env_type variable which
+nuances the results by showing the effect of specific environmental changes 
+or hazards on migration and the period_end variable to show how studies of these
+changes which take into account more recent events show varying average
+effects. The results of this model are below.
 
-# "mig_destination", "region"
+```{r results='asis'}
 
-m6a <- func.felm("stancoeff", c(con_base,  con_clim1, con_clim2, con_mig,
-                                con_context2, "region"), 
-                 c("paper", "0" , "paper"))
-m6b <- felm(m6a,  data = dat, weights=wt)
+dat$env_type <- as_factor(dat$env_type)
+
+dat1 <- dat %>% mutate(period_end_c = period_end - min(period_end))
+
+dat1$env_type <- str_replace_all(dat1$env_type, pattern = ".*disaster",
+                                replacement = "disaster")
+dat1$env_type <- str_replace_all(dat1$env_type, pattern = ".*Disaster",
+                                replacement = "disaster")
+dat1$env_type <- str_replace_all(dat1$env_type, pattern = "excess",
+                                 replacement = "extreme")
+dat1$env_type <- str_replace_all(dat1$env_type, pattern = "temperatures",
+                                 replacement = "temperature")
+dat1$env_type <- str_replace_all(dat1$env_type, pattern = "vulcano",
+                                 replacement = "volcano")
+dat1$env_type <- str_replace_all(dat1$env_type, pattern = "hurricanes",
+                                 replacement = "hurricane")
+dat1$env_type <- str_replace_all(dat1$env_type, pattern = "precipitation",
+                                 replacement = "rainfall")
+dat1$env_type <- str_replace_all(dat1$env_type, pattern = "shortage rainfall",
+                                 replacement = "rainfall shortage")
+dat1$env_type <- str_replace_all(dat1$env_type, pattern = "draught",
+                                 replacement = "drought")
+dat1$env_type <- str_replace_all(dat1$env_type, pattern = "^rainfall$",
+                                 replacement = "rainfall shortage")
+dat1$env_type <- str_replace_all(dat1$env_type, pattern = "^temperature$",
+                                 replacement = "temperature shortage")
+dat1$env_type <- str_replace_all(dat1$env_type, pattern = "rainfall shortage",
+                                 replacement = "drought")
+dat1$env_type <- str_replace_all(dat1$env_type, pattern = "volcano",
+                                 replacement = "disaster")
+dat1$env_type <- str_replace_all(dat1$env_type, pattern = "wildfire",
+                                 replacement = "disaster")
+# unique(dat1$env_type)
 
 
-summary(m6b)
+m6e <- glm(stancoeff ~ interaction + fe_time + fe_spatial + control_sum + 
+    pre_var + rapidonset + tem_lev + tem_var + env_lag_dum + 
+    env_timespan_dum + env_other_dum + internal + dest_low + 
+    dest_high + dest_ambi + L + LM + UM + agr + conflict_mepv_5 + 
+     period_end_c + env_type, data = dat1, weights = wt)
 
-stargazer(m6b,
+
+# summary(m6e)
+
+
+stargazer(m6e,
           type="latex",
-          # out="table 1_baseline_m1-m5.doc",
+          out="extension_table.doc",
           ci=T, 
           notes="Test",
           model.names = T,
           single.row = T,
-          font.size = "regular",
           omit = c("interaction", "fe_time", "fe_spatial", "control_sum", 
                    "yearscovered", "countrysample"),
           header = FALSE)
+
 ```
 
+The model shows that, based on their t-values, that more recent data included in
+a particular study is likely to reduce the average estimated likelihood of 
+migration from a country due to environmental changes by 0.001 for each year after
+1990 included in the study. In addition, the results show that, disaster-level
+events aside, floods are the environmental change most likely to cause an 
+increase in migration, increasing the predicted migration by an average of 0.014.
+Extreme temperature events also had a statistically significant effect on
+migration, interestingly decreasing the likelihood of migration.
 
+Adding in the environmental types into the model also produces a curious effect
+for the results of the rapid-onset variable. Instead of being positive and
+having an average effect of 0.014 on the migration score, its effect in this model
+is now negative. 
 
 \newpage
 # Bibliography
