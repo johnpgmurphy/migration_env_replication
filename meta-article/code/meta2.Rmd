@@ -1,0 +1,748 @@
+---
+title: "Replication of Hoffmann et al. (2020)"
+author: "Jack Murphy"
+date: "05/05/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(readxl)
+library(meta)
+library(metafor)
+library(lfe)
+library(lme4)
+library(stargazer)
+library(ggpubr)
+library(jtools)
+library(RColorBrewer) 
+library(rgeos)
+library(rnaturalearth)
+```
+
+```{r}
+setwd("~/Desktop/Gov52/rep_project/meta-article")
+
+countrydata <- read_xlsx("../data/Environmental Change and Migration_Country Level Data.xlsx")
+
+all_data <- get(load("../data/Environmental Change and Migration_Meta and Country Data.RData"))
+
+world <- ne_countries(returnclass = "sf")
+
+## MODELS IN MAIN TEXT
+
+# Baseline controls
+con_base <- c("interaction", "fe_time", "fe_spatial", "control_sum") 
+
+# Environmental variables 1
+con_clim1 <- c("pre_var", "rapidonset", "tem_lev", "tem_var")
+
+# Environmental variables 2
+con_clim2 <- c("env_lag_dum", "env_timespan_dum", "env_other_dum")
+
+# Migration variables
+con_mig <- c("internal", "dest_low", "dest_high", "dest_ambi") # , 
+
+# Compositional measures 1: Regional composition
+con_context1 <- "nonoecd"
+
+# Compositional measures 2: Composition by country characteristics
+con_context2 <-c("L", "LM", "UM", "agr", "conflict_mepv_5")
+
+## MODELS IN SUPPLEMENTARY MATERIALS
+
+# control variables used in models
+con_control <- c("income_channel", "conflict_channel", "controls_political", "controls_population", "controls_pastmigr", "controls_econlevel", "controls_culture", "controls_geo")
+
+# Sample size of models
+con_samplesize <- c("countrysample", "yearscovered")
+
+# Time and spatial fixed effects
+con_fixedeffects <- c("fe_time", "fe_spatial")
+
+# Weighting and further estimation features
+con_estimation <- c("weights", "lin", "robustness_check")
+
+# Publication characteristics of studies
+con_pub1 <- c( "published1")
+
+# Additional controls for focus on differential time periods
+con_time2 <- c("period_start" , "period_end")
+
+
+#prop.table(table(meta$temperature));  table(meta$temperature)
+#prop.table(table(meta$precipitation)); table(meta$precipitation)
+#prop.table(table(meta$rapidonset)); table(meta$rapidonset)
+#prop.table(table(meta$internal)); table(meta$internal)
+
+# Defining data and weights
+dat <- meta
+wt <- 1/meta$stanse^2
+
+```
+
+```{r}
+
+## 
+## FUNCTIONS TO IMPLEMENT MODELS *****************************
+##  
+
+func.felm <- function(yname,xnames, fixedeffect.cluster) {
+  controls <- paste(xnames, collapse = "+")
+  fe.c <- paste(fixedeffect.cluster,  collapse = "|" )
+  formula <- as.formula(paste(yname,"~",controls, "|", fe.c, sep = ""))
+  return(formula)
+}
+
+func.lmer <- function(yname,xnames) {
+  controls <- paste(xnames, collapse = "+")
+  formula <- as.formula(paste(yname,"~",controls,"+(1|paper)", sep = ""))
+  return(formula)
+}
+
+```
+
+
+## Overview of the Original Paper
+
+"A meta-analysis of country-level studies on environmental change and migration"
+by Roman Hoffmann, Anna Dimitrova, Raya Muttarak, Jesus Crespo Cuaresma, and 
+Jonas Peisker, published in Nature in October 2020, conducted, as the
+title suggests, a meta-analysis of 30 selected studies published between 2006
+and 2019 examining environmental change and out-migration.[^note_call] The authors 
+extracted estimates of the relationship between environmental change factors and
+migration from these 30 papers, generating 1803 such estimates each of which became
+a separate observation in their own models. 
+
+The authors focus on country-level studies that consider a variety of environmental
+factors like changing temperatures, heavy storms, and droughts. They standardized
+the effects of these factors by finding the mean and standard deviation
+for effects used across multiple studies, and expressing those values in terms of
+standard deviations from their respective means. 
+
+The authors then review the studies generally, categorizing the environmental 
+changes researched into rapid-onset or gradual changes, noting that a large 
+majority of the used estimates were for gradual environmental changes rather 
+than rapid-onset events such as floods or landslides. They note that 88.0% of the
+estimates focus on international migration, and that 27 of the studies find a 
+notable positive relationship between environmental changes and migration.
+
+After weighting the study results for their precision, the paper finds a 
+statistically significant positive relationship between such
+environmental changes and migration, though the strength and direction of the 
+relationship vary between studies. The authors found that "on average, a one 
+standard deviation change in the environmental conditions leads to an increase in 
+migration by 0.021 standard deviations." 
+
+Their first figure explores the heterogeneity of the studies analysed: regressing
+characteristics of the models the original studies used. They found that 
+rapid-onset changes in the environment have large
+impacts on migration, as do rainfall anomalies (like droughts), but changes
+in temperatures by contrast have a small - yet statistically significant - impact.
+Unfortunately the publicly available code did not include the lines needed
+to replicate this figure, so it is not included here.
+
+The below table is the first table included in the paper, the replicated
+results completely match the original published results. It displays the 
+resulting estimates for the impact of increasing numbers of variables
+on migration, as calculated by five increasingly complex fixed-effect
+linear models.
+
+The first model shows the estimated impact of temperature-level changes
+on migration in terms of standard deviations of migration, relative to
+a comparable change in precipitation levels.
+
+The model presented in the second column takes into account broader timeframes
+for the relationship between environmental changes and migration, looking at
+5- and 10-year timeframes as opposed to 1-year time frames examined in the 
+first column.
+
+The third model estimates take into account both these extended time frames as
+well as global migration flows. However as most of the original studies did not 
+measure internal migration, the differences are small (albeit robust).
+
+The fourth and fifth models dive into the international migration flows, finding larger
+effects tying environmental changes to migration towards non-OECD and low- or 
+middle-income countries. The difference between the internal and global migration 
+effects and these effects corroborates findings in the literature "that environmental
+migration is often short-distance, regional and temporary."
+
+These last two models take various samples of the countries examined in the original
+studies, sorting them into groups such as non-OECD, low-income, low-middle-income,
+upper-middle-income, and agriculturally dependent countries. This grouping is 
+intended to evaluate the difference in impact of environmental changes
+on migration depending on the economic characteristics of the country of origin. 
+These estimates indicate that the economic constraints faced by residents of
+low-income countries restrict migration following environmental changes as
+contrasted with the movements of residents of higher-income countries.
+
+[^note_call]: The data and code used in this replication report can be obtained 
+at ##insert github link here ##
+
+```{r results = 'asis'}
+
+## 
+## TABLE 1 WEIGHTED FELM MODEL: STANDARDIZED COEFF AS OUTCOME -----------------
+## 
+
+## COLUMN 1
+m1a <- func.felm("stancoeff", c(con_base, con_clim1),
+                 c("paper", "0", "paper"))
+m1b <- felm(m1a , data = dat, weights=wt)
+# summary(m1b)
+
+## COLUMN 2
+m2a <- func.felm("stancoeff", c(con_base, con_clim1, con_clim2), 
+                 c("paper", "0", "paper"))
+m2b <- felm(m2a , data = dat, weights=wt)
+# summary(m2b)
+
+## COLUMN 3
+m3a <- func.felm("stancoeff", c(con_base, con_clim1, con_clim2, con_mig), 
+                 c("paper", "0", "paper"))
+m3b <- felm(m3a , data = dat, weights=wt)
+# summary(m3b)
+
+## COLUMN 4
+m4a <- func.felm("stancoeff", c(con_base, con_clim1, con_clim2, con_mig, con_context1), 
+                 c("paper", "0" , "paper"))
+m4b <- felm(m4a , data = dat, weights=wt) 
+# summary(m4b) 
+
+## COLUMN 5
+m5a <- func.felm("stancoeff", c(con_base,  con_clim1, con_clim2, con_mig, con_context2), 
+                 c("paper", "0" , "paper"))
+m5b <- felm(m5a ,  data = dat, weights=wt)
+# summary(m5b)
+
+
+## TABLE 1
+stargazer(m1b, m2b, m3b, m4b, m5b,
+          type="latex",
+          out="../figures/table 1_baseline_m1-m5.doc",
+          ci=F, 
+          notes="Test",
+          model.names = T,
+          single.row = T,
+          font.size = "small",
+          omit = c("interaction", "fe_time", "fe_spatial", "control_sum", 
+                   "yearscovered", "countrysample"),
+          header = FALSE)
+
+rm(m1a, m2a, m3a, m4a, m5a, m1b, m2b, m3b, m4b, m5b)
+
+```
+
+
+\newpage
+
+In extending this paper I would amend three figures, although as the figures
+themselves do convey information adequately, the proposed extensions are more
+aesthetic than substantive.
+
+The first is figure 2, which visualizes the distribution of the effects of
+give types of environmental hazards on migration using violin plots. The
+original is replicated below.
+
+```{r}
+##
+## FIGURE 2 - VIOLIN PLOTS: DISTRIBUTION OF ENVIRONMENTAL EFFECTS BY ENVIRONMENTAL HAZARD -----
+## 
+
+
+meta %>% 
+  mutate(
+    climate_rec = as.factor(
+      ifelse(rapidonset == 1,"Rapid-onset disaster",
+             ifelse(pre_lev ==1, "Precipitation level change",
+                    ifelse(pre_var == 1,"Precipitation variability / anomaly",
+                           ifelse(tem_lev == 1, "Temperature level change",
+                                  ifelse(tem_var == 1, 
+                                         "Temperature variability / anomaly",
+                                         "NA")))))),
+    climate_rec = fct_reorder(.f = climate_rec, .x = stancoeff.w, 
+                              .fun = median, na.rm = TRUE, .desc = TRUE)
+  ) %>% 
+  ggplot(aes(y = climate_rec, x = stancoeff.w)) + 
+  geom_vline(xintercept = 0) +
+  geom_jitter(width = 0.3, size = 0.7, alpha = 0.3) +
+  geom_violin(scale="width", bw = 0.5, fill = NA) + 
+  geom_boxplot(outlier.shape=NA, width=0.32, fill="grey", alpha=0.5, 
+               position = position_dodge2(preserve = "single"))+
+  labs(
+    y = "",
+    x = "Precision-weighted standardized environmental effect"
+  ) +
+  coord_cartesian(xlim = c(-5,7)) +
+  scale_x_continuous(breaks = seq(-5,7, 1))+
+  theme(axis.text.y=element_text(size=10))
+
+ggsave("../figures/figure 2_violin_differences in environmental effects by hazards.jpg", 
+       dpi=600, width=8, height=6)
+```
+
+The proposed extension to this figure would make it more visually intuitive,
+adding varying point shapes which highlight the outliers of the graph, and
+colors that 
+
+```{r}
+##
+## FIGURE 2 - Extension -----
+## 
+
+
+meta %>% 
+  mutate(
+    climate_rec = as.factor(
+      ifelse(rapidonset == 1,"Rapid-onset disaster",
+             ifelse(pre_lev ==1, "Precipitation level change",
+                    ifelse(pre_var == 1,"Precipitation variability / anomaly",
+                           ifelse(tem_lev == 1, "Temperature level change",
+                                  ifelse(tem_var == 1, 
+                                         "Temperature variability / anomaly",
+                                         "NA")))))),
+    climate_rec = fct_reorder(.f = climate_rec, .x = stancoeff.w, 
+                              .fun = median, na.rm = TRUE, .desc = TRUE)
+  ) %>% 
+  ggplot(aes(y = climate_rec, x = stancoeff.w)) + 
+  geom_vline(xintercept = 0) +
+  geom_jitter(width = 0.3, size = 0.7, alpha = 0.3, color = "darkgoldenrod1") +
+  geom_violin(scale="width", bw = 0.5, fill = NA) + 
+  geom_boxplot(outlier.shape=NA, width=0.32, fill="grey", alpha=0.5, 
+               outlier.color = "brown1",
+               position = position_dodge2(preserve = "single"))+
+  labs(
+    y = "",
+    x = "Precision-weighted standardized environmental effect"
+  ) +
+  coord_cartesian(xlim = c(-5,7)) +
+  scale_x_continuous(breaks = seq(-5,7, 1))+
+  theme(axis.text.y=element_text(size=10))
+
+ggsave("../figures/figure 2_violin_differences in environmental effects by hazards_extended.jpg", 
+       dpi=600, width=8, height=6)
+
+```
+
+The second would be figure 3, similarly adding color to the plotted data and
+regression lines to make the visualisations more appealing.
+
+The original visualisations are made below:
+
+```{r}
+##
+## FIGURE 3 - LINE PLOTS: PREDICTED ENVIRONMENTAL EFFECTS BY SAMPLE COMPOSITION -----
+## 
+
+## Estimating predicted values using a mixed random effects model
+
+pred1a <- func.lmer("stancoeff", c(con_base, con_context2)) # including only compositional shares
+pred1b <- lmer(pred1a, data = dat , weights=wt)
+# summary(pred1b)
+
+
+pred1b_coef <- coefficients(pred1b)
+
+dat.predict <- dat %>% 
+  mutate(predict = mean(pred1b_coef$paper$`(Intercept)`)+
+           mean(pred1b_coef$paper$fe_time)+ # predictions based on coefficients for models controling for time ...
+           mean(pred1b_coef$paper$fe_spatial)+ # ... and spatial fixed effects
+           L*mean(pred1b_coef$paper$L)+
+           LM*mean(pred1b_coef$paper$LM)+
+           UM*mean(pred1b_coef$paper$UM)+
+           agr*mean(pred1b_coef$paper$agr)+
+           conflict_mepv_5*mean(pred1b_coef$paper$conflict_mepv_5))
+
+# summary(dat.predict$predict)
+
+
+## Plotting predicted effect sizes
+plot1 <- dat.predict %>% 
+  filter(agr<0.5 & conflict_mepv_5<0.5) %>% 
+  ggplot(aes(y=predict, x=M))+
+  geom_hline(yintercept = 0) +
+  geom_jitter(width=0.05, height=0.01, alpha=0.25)+
+  geom_smooth(method="lm", color = "black", formula = y ~ x) +
+  labs(
+    x = "% middle-income countries in sample", 
+    y = "Predicted environmental effect"
+    ) +
+  coord_cartesian(
+    ylim = c(-0.05, 0.05), 
+    xlim = c(0, 1)
+    )+
+  scale_y_continuous(breaks = seq(-0.05,0.05,0.025))+
+  scale_x_continuous(labels=scales::percent)+
+  theme(axis.title=element_text(size=13.8),
+        axis.text=element_text(size=11.3))
+#plot1
+
+plot2 <- dat.predict %>%
+  filter(L>0.8) %>% 
+  ggplot(aes(y=predict, x=agr))+
+  geom_hline(yintercept = 0) +
+  geom_jitter(width=0.03, height=0.01, alpha=0.25)+
+  geom_smooth(method="lm",se=T, color="Black", formula = y ~ x)+
+  labs(
+    x = "% agriculturally dependent countries in sample",
+    y = ""
+    )+
+  coord_cartesian(
+    ylim = c(-0.05, 0.05), 
+    xlim = c(0, 1)
+    )+
+  scale_y_continuous(breaks = seq(-0.05,0.05,0.025))+
+  scale_x_continuous(labels=scales::percent)+
+  theme(axis.title=element_text(size=13.3),
+        axis.text=element_text(size=11.3))
+# plot2
+
+plot3 <- dat.predict %>%
+  filter(agr<0.5) %>% 
+  ggplot(aes(y=predict, x=conflict_mepv_5))+
+  geom_hline(yintercept = 0) +
+  geom_jitter(width=0.03, height=0.01, alpha=0.25)+
+  geom_smooth(method="lm", color="black", formula = y ~ x)+
+  labs(
+    x = "% conflict countries in sample",
+    y = ""
+    ) +
+  coord_cartesian(
+    ylim = c(-0.05, 0.05), 
+    xlim = c(0, 1)
+    ) +
+  scale_y_continuous(breaks=seq(-0.05,0.05,0.025))+
+  scale_x_continuous(labels=scales::percent)+
+  theme(axis.title=element_text(size=13.8),
+        axis.text=element_text(size=11.3))
+
+ # plot3
+
+plot123 <- ggarrange(plot1, plot2, plot3, align="h", nrow = 1, labels = "auto")
+
+plot1
+plot2
+plot3
+
+#plot123 
+
+ggsave("../figures/figure 3_line plots_sample composition effects.jpg", width=15, height=5, dpi=600)
+
+rm(pred1a,pred1b, plot1,plot2,plot3,plot123)
+```
+
+The proposed amended plots would look something like this:
+
+```{r}
+##
+## FIGURE 3 - LINE PLOTS: Extension -----
+## 
+
+## Estimating predicted values using a mixed random effects model
+
+pred1a <- func.lmer("stancoeff", c(con_base, con_context2)) # including only compositional shares
+pred1b <- lmer(pred1a, data = dat , weights=wt)
+# summary(pred1b)
+
+
+pred1b_coef <- coefficients(pred1b)
+
+dat.predict <- dat %>% 
+  mutate(predict = mean(pred1b_coef$paper$`(Intercept)`)+
+           
+           # predictions based on coefficients for models controling for time ...
+           
+           mean(pred1b_coef$paper$fe_time)+ 
+           
+           # ... and spatial fixed effects
+           
+           mean(pred1b_coef$paper$fe_spatial)+ 
+           L*mean(pred1b_coef$paper$L)+
+           LM*mean(pred1b_coef$paper$LM)+
+           UM*mean(pred1b_coef$paper$UM)+
+           agr*mean(pred1b_coef$paper$agr)+
+           conflict_mepv_5*mean(pred1b_coef$paper$conflict_mepv_5))
+
+# summary(dat.predict$predict)
+
+
+## Plotting predicted effect sizes
+
+plot1 <- dat.predict %>% 
+  filter(agr<0.5 & conflict_mepv_5<0.5) %>% 
+  ggplot(aes(y=predict, x=M))+
+  geom_hline(yintercept = 0) +
+  geom_jitter(width=0.05, height=0.01, alpha=0.25, color = "azure2")+
+  geom_smooth(method="lm", color = "black", formula = y ~ x) +
+  labs(
+    x = "% middle-income countries in sample", 
+    y = "Predicted environmental effect"
+    ) +
+  coord_cartesian(
+    ylim = c(-0.05, 0.05), 
+    xlim = c(0, 1)
+    )+
+  scale_y_continuous(breaks = seq(-0.05,0.05,0.025))+
+  scale_x_continuous(labels=scales::percent)+
+  theme(axis.title=element_text(size=13.8),
+        axis.text=element_text(size=11.3))
+# plot1
+
+plot2 <- dat.predict %>%
+  filter(L>0.8) %>% 
+  ggplot(aes(y=predict, x=agr))+
+  geom_hline(yintercept = 0) +
+  geom_jitter(width=0.03, height=0.01, alpha=0.25, color = "bisque1")+
+  geom_smooth(method="lm",se=T, color="Black", formula = y ~ x)+
+  labs(
+    x = "% agriculturally dependent countries in sample",
+    y = ""
+    )+
+  coord_cartesian(
+    ylim = c(-0.05, 0.05), 
+    xlim = c(0, 1)
+    )+
+  scale_y_continuous(breaks = seq(-0.05,0.05,0.025))+
+  scale_x_continuous(labels=scales::percent)+
+  theme(axis.title=element_text(size=13.3),
+        axis.text=element_text(size=11.3))
+# plot2
+
+plot3 <- dat.predict %>%
+  filter(agr<0.5) %>% 
+  ggplot(aes(y=predict, x=conflict_mepv_5))+
+  geom_hline(yintercept = 0) +
+  geom_jitter(width=0.03, height=0.01, alpha=0.25, color = "darkseagreen")+
+  geom_smooth(method="lm", color="black", formula = y ~ x)+
+  labs(
+    x = "% conflict countries in sample",
+    y = ""
+    ) +
+  coord_cartesian(
+    ylim = c(-0.05, 0.05), 
+    xlim = c(0, 1)
+    ) +
+  scale_y_continuous(breaks=seq(-0.05,0.05,0.025))+
+  scale_x_continuous(labels=scales::percent)+
+  theme(axis.title=element_text(size=13.8),
+        axis.text=element_text(size=11.3))
+
+  # plot3
+
+plot123 <- ggarrange(plot1, plot2, plot3, align="h", nrow = 1, labels = "auto")
+
+plot1
+plot2
+plot3
+
+#plot123    
+ggsave("../figures/figure 3_line plots_sample composition effects_extended.jpg", 
+       width=15, height=5, dpi=600)
+
+rm(pred1a,pred1b, plot1,plot2,plot3,plot123)
+
+
+```
+
+
+The last would be figure 4,
+which color-codes the countries of the world according to their predicted migration
+based on their historical exposure to environmental change from 1960 to 2000.
+This data is measured in standard deviations of the world distribution and their 
+economic and sociopolitical characteristics measured in the year 2000. The latter 
+is measured using income level, agricultural dependency, and conflict as in model
+5 from Table 1. 
+
+```{r}
+##
+## FIGURE 4 - MAP: PREDICTED ENVIRONMENTAL EFFECT ON MIGRATION WORLDWIDE ------
+## 
+
+countrydata <- 
+  countrydata %>%   
+  mutate(
+    predictedresponse = 
+      mean(pred1b_coef$paper$`(Intercept)`)+
+      
+   # predictions based on coefficients for models controling for time ...
+
+      mean(pred1b_coef$paper$fe_time)+ 
+     
+   #... and spatial fixed effects
+     
+      mean(pred1b_coef$paper$fe_spatial)+ 
+      L*mean(pred1b_coef$paper$L)+
+      LM*mean(pred1b_coef$paper$LM)+
+      UM*mean(pred1b_coef$paper$UM)+
+      agr*mean(pred1b_coef$paper$agr),
+    conflict_mepv_5*mean(pred1b_coef$paper$conflict_mepv_5),
+    predictedmig = env_change*predictedresponse,
+    predictedmig_cat = cut(predictedmig, breaks = c(-Inf,-0.025,0.025,0.05,0.1,0.15,0.2,Inf))
+  )
+
+# summary(countrydata$predictedmig)
+
+map_world <- 
+  world %>% 
+  mutate(adm0_a3 = recode(adm0_a3, "SDS"="SSD")) %>% 
+  right_join(countrydata, by = c("adm0_a3" = "iso3c"))
+
+map_world %>% 
+  ggplot() +
+    geom_sf(aes(fill = predictedmig_cat)) + 
+    coord_sf(crs = "+proj=eqearth") + 
+    theme_minimal() +
+    theme(
+      axis.text = element_blank(),
+    ) +
+    scale_fill_manual(
+      name = "Predicted migration", 
+      values = c(
+        "(-Inf,-0.025]" = "#3f7ad9",
+        "(-0.025,0.025]" = "#dee4fa",
+        "(0.025,0.05]"="#fae0de",
+        "(0.05,0.1]"="#de9999",
+        "(0.1,0.15]"="#db6969",
+        "(0.15,0.2]"="#de4949",
+        "(0.2, Inf]"="#db1414"
+      ),
+      labels = c(
+        "negative [-0.55,-0.025]",
+        "none (-0.025,0.025]",
+        "very low (0.025,0.05]",
+        "low (0.05,0.1]",
+        "moderate (0.1,0.15]",
+        "high (0.15, 0.20]",
+        "very high (0.2, 0.50]"),
+      na.translate = FALSE
+    )
+ggsave("../figures/figure 4_map_predicted environmental migration.jpg", width = 10, 
+       height=4.5, dpi=600)
+
+```
+
+
+My proposed extension to this figure would be converting this map which identifies
+hotspots of environmental migration based on data from 2000 into an animation
+that displays global out-migration trends over a longer time period. 
+More than half of the studies incorporated in this meta-analysis contain data 
+from years after 2000, with 16 of the 30 total studies including data up to 2010. 
+In addition, half of the studies included data from before 1975. However, only
+4 studies of the 30 had data from both prior to 1975 and later than 2000. 
+
+The selected country-level data, in terms of income-status identification for
+each country, whether the country was involved in a conflict, and whether a country 
+is more of an agricultural exporter or importer, and their environmental
+change score in a particular year, could be calculated for any year. 
+
+An animated progression through the years based on the available data for
+each country in each year would be a fascinating extension of this project, providing not
+only an understanding of what regions' migration patterns are being affected by 
+environmental changes and how, but also of how those patterns are developing
+year by year. This information is currently not conveyed by the original 
+visualisation.
+
+Unfortunately, the original authors of the paper did not include the data
+used to construct their countrydata dataframe (which is the 2000 snapshot). 
+However, with the same data used to build that dataframe, similar ones could 
+certainly be built for other years and allow for a time-lapse animation using
+the same mapping functions as well as a package like gganimate.
+
+## Conclusion
+
+To replicate this project I consulted the code and data provided by the original
+authors at https://doi.org/10.7910/DVN/HYRXVV. I am grateful to the original
+authors for making this data and code publicly available.
+
+Their data was well-organised and accessible, and their variables used in the
+model were correctly coded. The code provided ran easily with the specified 
+packages and reproduced practically identical results, with very minor 
+variations due to the chosen sampling method. The first figure I was unable
+to replicate, as the authors did not publish its code. However, the remaining
+tables and figures were replicable and thus I have high confidence that the
+first figure's data and code are reliable. 
+
+The authors created vectors of several combinations of key variables to 
+plug into the custom functions func.felm and func.lmer that they created. The 
+models used in the main section of the paper were all run using the func.felm
+function, producing fixed-effect linear models. 
+
+The results make sense: based on the data provided by the authors, the 
+environmental changes, and in particular rapid-onset events, increase
+out-migration from the affected countries. This is corroborated elsewhere 
+in literature not included in this meta-analysis, such as in:
+
+Gori Maia, Alexandre, and Schons, Stella Zucchetti. "The Effect of Environmental 
+Change on Out-migration in the Brazilian Amazon Rainforest." Population and 
+Environment 42, no. 2 (2020): 183-218.
+
+and 
+
+De Lellis, Pietro, Ruiz Marín, Manuel, and Porfiri, Maurizio. "Modeling Human 
+Migration Under Environmental Change: A Case Study of the Effect of Sea Level 
+Rise in Bangladesh." Earth's Future 9, no. 4 (2021): N/a.
+
+To extend the original models I recommend creating an animated version of figure 
+4, a world map showing migration hot spots predicted based on factors including
+conflict, GDP per capita, and environmental changes. Such a map, if animated
+as a time-lapse, would provide a further dimension to understand the implications
+of the findings of this meta-analysis.
+
+I also produced a sixth linear model using the variables 
+examined in the authors' fifth with the addition of regional factor variables
+to identify how the same results varied from one region to another. The results
+of this model are below.
+
+```{r results = 'asis'}
+
+regions <- c("ssa", "europena", "asia", "lac", 
+                                "mena")
+
+# "mig_destination", "region"
+
+m6a <- func.felm("stancoeff", c(con_base,  con_clim1, con_clim2, con_mig,
+                                con_context2, "region"), 
+                 c("paper", "0" , "paper"))
+m6b <- felm(m6a,  data = dat, weights=wt)
+
+
+summary(m6b)
+
+stargazer(m6b,
+          type="latex",
+          # out="table 1_baseline_m1-m5.doc",
+          ci=T, 
+          notes="Test",
+          model.names = T,
+          single.row = T,
+          font.size = "regular",
+          omit = c("interaction", "fe_time", "fe_spatial", "control_sum", 
+                   "yearscovered", "countrysample"),
+          header = FALSE)
+```
+
+
+
+\newpage
+# Bibliography
+
+De Lellis, Pietro, Ruiz Marín, Manuel, and Porfiri, Maurizio. "Modeling Human 
+Migration Under Environmental Change: A Case Study of the Effect of Sea Level 
+Rise in Bangladesh." Earth's Future 9, no. 4 (2021): N/a.
+
+Gori Maia, Alexandre, and Schons, Stella Zucchetti. "The Effect of Environmental 
+Change on Out-migration in the Brazilian Amazon Rainforest." Population and 
+Environment 42, no. 2 (2020): 183-218.
+
+Hoffmann, Roman, Dimitrova, Anna, Muttarak, Raya, Crespo Cuaresma, Jesus, and Peisker, Jonas. "A Meta-analysis of Country-level Studies on Environmental Change and Migration." Nature Climate Change 10, no. 10 (2020): 904.
+
+Meager, Rachel, "Understanding the Average Impact of Microcredit Expansions: A Bayesian Hierarchical Analysis of Seven Randomized Experiments"  The American Economic Journal: Applied Economics, January 2019.
+
+```{r}
+
+```
+
+
+
+

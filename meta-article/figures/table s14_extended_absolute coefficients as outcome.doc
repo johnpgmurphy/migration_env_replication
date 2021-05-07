@@ -1,0 +1,43 @@
+
+\begin{table}[!htbp] \centering 
+  \caption{} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{5pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{5}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-6} 
+\\[-1.8ex] & \multicolumn{4}{c}{stancoeff.abs} & stancoeff \\ 
+\\[-1.8ex] & \multicolumn{4}{c}{\textit{felm}} & \textit{felm} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ income\_channel & $-$0.012$^{**}$ (0.005) &  &  &  &  \\ 
+  conflict\_channel & $-$0.026$^{***}$ (0.009) &  &  &  &  \\ 
+  controls\_political & $-$0.001 (0.010) &  &  &  &  \\ 
+  controls\_population & $-$0.026$^{**}$ (0.011) &  &  &  &  \\ 
+  controls\_pastmigr & 0.001$^{***}$ (0.00003) &  &  &  &  \\ 
+  controls\_econlevel & $-$0.015$^{***}$ (0.005) &  &  &  &  \\ 
+  controls\_culture & $-$0.018 (0.011) &  &  &  &  \\ 
+  controls\_geo & $-$0.026$^{***}$ (0.006) &  &  &  &  \\ 
+  control\_sum & 0.014$^{**}$ (0.006) &  &  &  &  \\ 
+  fe\_time &  & $-$0.022$^{***}$ (0.0002) &  &  &  \\ 
+  fe\_spatial &  & 0.001$^{***}$ (0.000) &  &  &  \\ 
+  countrysample &  &  & $-$0.00002$^{**}$ (0.00001) &  &  \\ 
+  yearscovered &  &  & 0.003 (0.003) &  &  \\ 
+  weights &  &  &  & $-$0.002 (0.004) &  \\ 
+  lin &  &  &  & 0.057$^{***}$ (0.001) &  \\ 
+  robustness\_check1 &  &  &  & 0.001 (0.004) &  \\ 
+  period\_start &  &  &  &  & 0.013$^{***}$ (0.005) \\ 
+  period\_end &  &  &  &  & 0.001 (0.003) \\ 
+ \hline \\[-1.8ex] 
+Observations & 1,803 & 1,803 & 1,803 & 1,803 & 1,803 \\ 
+R$^{2}$ & 0.389 & 0.380 & 0.377 & 0.377 & 0.216 \\ 
+Adjusted R$^{2}$ & 0.375 & 0.369 & 0.365 & 0.364 & 0.201 \\ 
+Residual Std. Error & 1.417 (df = 1761) & 1.424 (df = 1768) & 1.427 (df = 1768) & 1.428 (df = 1767) & 1.633 (df = 1768) \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Test} \\ 
+\end{tabular} 
+\end{table} 
