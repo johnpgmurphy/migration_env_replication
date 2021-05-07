@@ -10,7 +10,7 @@ The data subdirectory contains the data in three files: one .xlsx file containin
 
 The code subdirectory contains the .Rproj file for this project, titled meta-article. It also has a copy of the .Rmd file containing the replication code, and the resulting .pdf titled meta2. In addition it has the authors' original code file in .R format, titled "Environmental Change and Migration_Code File" taken from their Dataverse hosted site listed above.
 
-The renv subdirectory contains information on the environment in which the replication was run, contained in its activate.R file, library folder, and settings.dcf file. The replication was run on a 2017 MacBook Air with a dual-core Intel i7 processor and 8GB of memory.
+The renv subdirectory contains information on the environment in which the replication was run, contained in its activate.R file, library folder, and settings.dcf file. The replication was run on a 2017 MacBook Air with a dual-core Intel i7 processor and 8GB of memory. The program used was R version 4.0.2, using the following packages (and versions): tidyverse (1.3.0), readxl (1.3.1), meta (4.18-0), metafor (2.4-0), lfe (2.8-6), lme4 (1.1-26), stargazer 5.2.2, ggpubr (0.4.0), jtools (2.1.3), RColorBrewer (1.1-2), rgeos (0.5-5), and rnaturalearth (0.2.0).
 
 The figures subdirectory contains figures and tables produced by the code, including two versions of figures 2 and 3 (original and extended), as well as figures 4, ED2, ED3a, and ED3b. These are all .jpg files. It also contains table 1 and table s14 as .doc files.
 
